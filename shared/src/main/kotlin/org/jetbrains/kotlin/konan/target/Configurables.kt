@@ -16,7 +16,27 @@
 
 package org.jetbrains.kotlin.konan.target
 
-import org.jetbrains.kotlin.konan.properties.*
+interface TargetableExternalStorage {
+    fun targetString(key: String): String?
+    fun targetList(key: String): List<String>
+    fun hostString(key: String): String?
+    fun hostList(key: String): List<String>
+    fun hostTargetString(key: String): String?
+    fun hostTargetList(key: String): List<String>
+    fun absolute(value: String?): String
+    fun downloadDependencies()
+
+    fun readProperty(name: String): String
+
+    // TODO: Track circular deps.
+    fun String.resolveValue(): String = when {
+        startsWith("$") -> readProperty(drop(1).resolveValue()).resolveValue()
+        else -> this
+    }
+
+    fun resolve(value: String): String =
+            value.resolveValue()
+}
 
 interface ClangFlags : TargetableExternalStorage {
     val clangFlags get()        = targetList("clangFlags")
@@ -46,11 +66,11 @@ interface Configurables : TargetableExternalStorage {
     val targetSysRoot get() = targetString("targetSysRoot")
 
     // Notice: these ones are host-target.
-    val targetToolchain get() = hostTargetString("targetToolchain")
+    val targetToolchain get() = hostTargetString("targetToolchain")?.resolveValue()
 
     val absoluteTargetSysRoot get() = absolute(targetSysRoot)
     val absoluteTargetToolchain get() = absolute(targetToolchain)
-    val absoluteLlvmHome get() = absolute(llvmHome)
+    val absoluteLlvmHome get() = absolute(llvmHome?.resolveValue())
 }
 
 interface TargetableConfigurables : Configurables {

@@ -22,23 +22,24 @@ import org.jetbrains.kotlin.konan.target.HostManager
 import org.jetbrains.kotlin.konan.util.ArchiveType
 import org.jetbrains.kotlin.konan.util.DependencyProcessor
 import java.io.File
-
-interface TargetableExternalStorage {
-    fun targetString(key: String): String? 
-    fun targetList(key: String): List<String>
-    fun hostString(key: String): String? 
-    fun hostList(key: String): List<String> 
-    fun hostTargetString(key: String): String? 
-    fun hostTargetList(key: String): List<String> 
-    fun absolute(value: String?): String
-    fun downloadDependencies()
-}
+import java.nio.file.Paths
 
 abstract class KonanPropertiesLoader(override val target: KonanTarget,
                                      val properties: Properties,
                                      private val baseDir: String? = null,
                                      private val host: KonanTarget = HostManager.host) : Configurables {
-    open val dependencies get() = hostTargetList("dependencies")
+    open val dependencies: List<String>
+        get() {
+            val dependencies = hostTargetList("dependencies")
+            val llvmDependency: String? = when {
+                llvmHome?.startsWith("\$llvmDistribution") == true -> llvmHome?.resolveValue()
+                else -> null
+            }
+            return dependencies + listOfNotNull(llvmDependency)
+        }
+
+    override fun readProperty(name: String): String =
+            properties.getProperty(name)
 
     override fun downloadDependencies() {
         dependencyProcessor!!.run()
@@ -58,8 +59,8 @@ abstract class KonanPropertiesLoader(override val target: KonanTarget,
         = properties.hostTargetList(key, target, host)
 
     override fun absolute(value: String?): String =
-            dependencyProcessor!!.resolveRelative(value!!).absolutePath
-    private val dependencyProcessor  by lazy {
+            if (Paths.get(value!!).isAbsolute) value else dependencyProcessor!!.resolveRelative(value).absolutePath
+    private val dependencyProcessor by lazy {
         baseDir?.let {
             DependencyProcessor(
                     dependenciesRoot = File(baseDir),
