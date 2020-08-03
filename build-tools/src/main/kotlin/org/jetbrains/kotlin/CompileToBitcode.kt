@@ -67,8 +67,10 @@ open class CompileToBitcode @Inject constructor(@InputDirectory val srcRoot: Fil
                             "-Werror", "-ftls-model=initial-exec", "-Wno-unused-function")
                 Language.CPP ->
                     listOfNotNull("-std=c++14", "-Werror", "-O2",
-                            "-Wall",
+                            "-Wall", "-Wextra",
+                            "-Wno-unused-parameter",  // False positives with link time polymorphism.
                             "-Wno-unused-function",  // TODO: Enable this warning when we have C++ runtime tests.
+                            "-Wno-sign-compare",  // TODO: Enable this warning.
                             "-fPIC".takeIf { !HostManager().targetByName(target).isMINGW })
             }
             return commonFlags + languageFlags + compilerArgs
