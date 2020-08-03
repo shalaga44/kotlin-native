@@ -179,7 +179,7 @@ OBJ_GETTER(GetStackTraceStrings, KConstRef stackTrace) {
     char **symbols = backtrace_symbols(PrimitiveArrayAddressOfElementAt<KNativePtr>(stackTrace->array(), 0), size);
     RuntimeCheck(symbols != nullptr, "Not enough memory to retrieve the stacktrace");
 
-    for (int index = 0; index < size; ++index) {
+    for (uint32_t index = 0; index < size; ++index) {
       auto sourceInfo = getSourceInfo(stackTrace, index);
       const char* symbol = symbols[index];
       const char* result;

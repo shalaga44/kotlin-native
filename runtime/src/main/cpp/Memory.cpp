@@ -93,7 +93,7 @@ constexpr size_t kMaxToFreeSizeThreshold = 8 * 1024;
 // Never exceed this value when increasing size for toFree set, triggering actual cycle collector.
 constexpr size_t kMaxErgonomicToFreeSizeThreshold = 8 * 1024 * 1024;
 // How many elements in finalizer queue allowed before cleaning it up.
-constexpr size_t kFinalizerQueueThreshold = 32;
+constexpr int kFinalizerQueueThreshold = 32;
 // If allocated that much memory since last GC - force new GC.
 constexpr size_t kMaxGcAllocThreshold = 8 * 1024 * 1024;
 // If the ratio of GC collection cycles time to program execution time is greater this value,
@@ -738,7 +738,7 @@ inline void traverseObjectFields(ObjHeader* obj, func process) {
     }
   } else {
     ArrayHeader* array = obj->array();
-    for (int index = 0; index < array->count_; index++) {
+    for (size_t index = 0; index < array->count_; index++) {
       process(ArrayAddressOfElementAt(array, index));
     }
   }
@@ -757,7 +757,7 @@ inline void traverseContainerObjectFields(ContainerHeader* container, func proce
   RuntimeAssert(!isAggregatingFrozenContainer(container), "Must not be called on such containers");
   ObjHeader* obj = reinterpret_cast<ObjHeader*>(container + 1);
 
-  for (int object = 0; object < container->objectCount(); object++) {
+  for (size_t object = 0; object < container->objectCount(); object++) {
     traverseObjectFields(obj, process);
     obj = reinterpret_cast<ObjHeader*>(
       reinterpret_cast<uintptr_t>(obj) + objectSize(obj));
@@ -936,7 +936,7 @@ void freeAggregatingFrozenContainer(ContainerHeader* container) {
   // Special container for frozen objects.
   ContainerHeader** subContainer = reinterpret_cast<ContainerHeader**>(container + 1);
   MEMORY_LOG("Total subcontainers = %d\n", container->objectCount());
-  for (int i = 0; i < container->objectCount(); ++i) {
+  for (uint32_t i = 0; i < container->objectCount(); ++i) {
     MEMORY_LOG("Freeing subcontainer %p\n", *subContainer);
     freeContainer(*subContainer++);
   }
@@ -951,7 +951,7 @@ void freeAggregatingFrozenContainer(ContainerHeader* container) {
 // so better be inlined.
 ALWAYS_INLINE void runDeallocationHooks(ContainerHeader* container) {
   ObjHeader* obj = reinterpret_cast<ObjHeader*>(container + 1);
-  for (int index = 0; index < container->objectCount(); index++) {
+  for (uint32_t index = 0; index < container->objectCount(); index++) {
     auto* type_info = obj->type_info();
     if (type_info == theWorkerBoundReferenceTypeInfo) {
       DisposeWorkerBoundReference(obj);
@@ -1534,7 +1534,7 @@ inline ArenaContainer* initedArena(ObjHeader** auxSlot) {
 inline size_t containerSize(const ContainerHeader* container) {
   size_t result = 0;
   const ObjHeader* obj = reinterpret_cast<const ObjHeader*>(container + 1);
-  for (int object = 0; object < container->objectCount(); object++) {
+  for (uint32_t object = 0; object < container->objectCount(); object++) {
     size_t size = objectSize(obj);
     result += size;
     obj = reinterpret_cast<ObjHeader*>(reinterpret_cast<uintptr_t>(obj) + size);
@@ -1653,7 +1653,7 @@ void garbageCollect(MemoryState* state, bool force) {
   GC_LOG("||| GC: decrementStackDuration = %lld\n", decrementStackDuration);
 #endif
   long stackReferences = afterDecrements - beforeDecrements;
-  if (state->gcErgonomics && stackReferences * 5 > state->gcThreshold) {
+  if (state->gcErgonomics && stackReferences > 0 && (size_t)stackReferences * 5 > state->gcThreshold) {
     increaseGcThreshold(state);
     GC_LOG("||| GC: too many stack references, increased threshold to %d\n", state->gcThreshold);
   }

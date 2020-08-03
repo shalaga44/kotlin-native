@@ -70,7 +70,6 @@ open class CompileToBitcode @Inject constructor(@InputDirectory val srcRoot: Fil
                             "-Wall", "-Wextra",
                             "-Wno-unused-parameter",  // False positives with link time polymorphism.
                             "-Wno-unused-function",  // TODO: Enable this warning when we have C++ runtime tests.
-                            "-Wno-sign-compare",  // TODO: Enable this warning.
                             "-fPIC".takeIf { !HostManager().targetByName(target).isMINGW })
             }
             return commonFlags + languageFlags + compilerArgs

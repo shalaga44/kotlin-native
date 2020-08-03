@@ -455,7 +455,7 @@ OBJ_GETTER(Kotlin_CharArray_copyOf, KConstRef thiz, KInt newSize) {
     ThrowIllegalArgumentException();
   }
   ArrayHeader* result = AllocArrayInstance(array->type_info(), newSize, OBJ_RESULT)->array();
-  KInt toCopy = array->count_ < newSize ?  array->count_ : newSize;
+  KInt toCopy = array->count_ < (uint32_t)newSize ?  array->count_ : newSize;
   memcpy(
       PrimitiveArrayAddressOfElementAt<KChar>(result, 0),
       PrimitiveArrayAddressOfElementAt<KChar>(array, 0),
@@ -633,7 +633,7 @@ KInt Kotlin_NativePtrArray_getArrayLength(KConstRef thiz) {
 
 OBJ_GETTER(Kotlin_ImmutableBlob_toByteArray, KConstRef thiz, KInt startIndex, KInt endIndex) {
   const ArrayHeader* array = thiz->array();
-  if (startIndex < 0 || endIndex > array->count_ || startIndex > endIndex) {
+  if (startIndex < 0 || endIndex < 0 || (uint32_t)endIndex > array->count_ || startIndex > endIndex) {
       ThrowArrayIndexOutOfBoundsException();
   }
   KInt count = endIndex - startIndex;
@@ -646,7 +646,7 @@ OBJ_GETTER(Kotlin_ImmutableBlob_toByteArray, KConstRef thiz, KInt startIndex, KI
 
 KNativePtr Kotlin_ImmutableBlob_asCPointerImpl(KRef thiz, KInt offset) {
   ArrayHeader* array = thiz->array();
-  if (offset < 0 || offset > array->count_)  {
+  if (offset < 0 || (uint32_t)offset > array->count_)  {
         ThrowArrayIndexOutOfBoundsException();
   }
   return PrimitiveArrayAddressOfElementAt<KByte>(array, offset);
@@ -654,7 +654,7 @@ KNativePtr Kotlin_ImmutableBlob_asCPointerImpl(KRef thiz, KInt offset) {
 
 KNativePtr Kotlin_Arrays_getByteArrayAddressOfElement(KRef thiz, KInt index) {
   ArrayHeader* array = thiz->array();
-  if (index < 0 || index >= array->count_) {
+  if (index < 0 || (uint32_t)index >= array->count_) {
     ThrowArrayIndexOutOfBoundsException();
   }
 
@@ -672,7 +672,7 @@ KNativePtr Kotlin_Arrays_getStringAddressOfElement (KRef thiz, KInt index) {
 
 KNativePtr Kotlin_Arrays_getShortArrayAddressOfElement(KRef thiz, KInt index) {
   ArrayHeader* array = thiz->array();
-  if (index < 0 || index >= array->count_) {
+  if (index < 0 || (uint32_t)index >= array->count_) {
     ThrowArrayIndexOutOfBoundsException();
   }
 
@@ -681,7 +681,7 @@ KNativePtr Kotlin_Arrays_getShortArrayAddressOfElement(KRef thiz, KInt index) {
 
 KNativePtr Kotlin_Arrays_getIntArrayAddressOfElement(KRef thiz, KInt index) {
   ArrayHeader* array = thiz->array();
-  if (index < 0 || index >= array->count_) {
+  if (index < 0 || (uint32_t)index >= array->count_) {
     ThrowArrayIndexOutOfBoundsException();
   }
 
@@ -690,7 +690,7 @@ KNativePtr Kotlin_Arrays_getIntArrayAddressOfElement(KRef thiz, KInt index) {
 
 KNativePtr Kotlin_Arrays_getLongArrayAddressOfElement(KRef thiz, KInt index) {
   ArrayHeader* array = thiz->array();
-  if (index < 0 || index >= array->count_) {
+  if (index < 0 || (uint32_t)index >= array->count_) {
     ThrowArrayIndexOutOfBoundsException();
   }
 
@@ -699,7 +699,7 @@ KNativePtr Kotlin_Arrays_getLongArrayAddressOfElement(KRef thiz, KInt index) {
 
 KNativePtr Kotlin_Arrays_getFloatArrayAddressOfElement(KRef thiz, KInt index) {
   ArrayHeader* array = thiz->array();
-  if (index < 0 || index >= array->count_) {
+  if (index < 0 || (uint32_t)index >= array->count_) {
     ThrowArrayIndexOutOfBoundsException();
   }
 
@@ -708,7 +708,7 @@ KNativePtr Kotlin_Arrays_getFloatArrayAddressOfElement(KRef thiz, KInt index) {
 
 KNativePtr Kotlin_Arrays_getDoubleArrayAddressOfElement(KRef thiz, KInt index) {
   ArrayHeader* array = thiz->array();
-  if (index < 0 || index >= array->count_) {
+  if (index < 0 || (uint32_t)index >= array->count_) {
     ThrowArrayIndexOutOfBoundsException();
   }
 

@@ -93,7 +93,7 @@ struct Job {
 
     struct {
       KNativePtr operation;
-      KLong whenExecute;
+      uint64_t whenExecute;
     } executeAfter;
   };
 };
@@ -339,6 +339,8 @@ class State {
     Worker* worker = nullptr;
     Locker locker(&lock_);
 
+    RuntimeAssert(afterMicroseconds >= 0, "afterMicroseconds can not be negative");
+
     auto it = workers_.find(id);
     if (it == workers_.end()) {
       return false;
@@ -350,7 +352,7 @@ class State {
     if (afterMicroseconds == 0) {
       worker->putJob(job, false);
     } else {
-      job.executeAfter.whenExecute = konan::getTimeMicros() + afterMicroseconds;
+      job.executeAfter.whenExecute = konan::getTimeMicros() + (uint64_t)afterMicroseconds;
       worker->putDelayedJob(job);
     }
     return true;
@@ -846,6 +848,7 @@ KLong Worker::checkDelayedLocked() {
     queue_.push_back(job);
     return 0;
   } else {
+    // whenExecute > now.
     return job.executeAfter.whenExecute - now;
   }
 }

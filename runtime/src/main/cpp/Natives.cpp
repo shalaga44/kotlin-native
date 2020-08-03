@@ -49,7 +49,7 @@ OBJ_GETTER0(Kotlin_native_internal_undefined) {
 }
 
 void* Kotlin_interop_malloc(KLong size, KInt align) {
-  if (size > SIZE_MAX) {
+  if (size > (KLong)SIZE_MAX) {
     return nullptr;
   }
   RuntimeAssert(align > 0, "Unsupported alignment");
